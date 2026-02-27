@@ -2,6 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Estilos de personalización */
+.capturing-mode .capturing-show {
+    display: block !important;
+}
+
+.capturing-mode .capturing-hide-controls {
+    display: none !important;
+}
+
+.capturing-mode .capturing-hide-controls-parent {
+    border-style: none !important;
+}
+
+.capturing-mode .capturing-hide-controls {
+    display: none !important;
+}
+
+/* Forzar renderizado */
+.capturing-mode img {
+    opacity: 1 !important;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 100px;
+}
+
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 255, 255, 255;

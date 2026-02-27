@@ -2,11 +2,14 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Search, ShoppingCart, User, Menu, X } from 'lucide-react'
+import { Search, ShoppingCart, Menu, X } from 'lucide-react'
+import { useCart } from '@/context/CartContext'
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
+  const { items } = useCart()
+  const itemCount = items.reduce((acc, item) => acc + item.quantity, 0)
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-lg">
@@ -18,35 +21,13 @@ export default function Navbar() {
           
           {/* Lado Izquierdo: Menú Hamburguesa */}
           <div className="flex items-center gap-6 flex-1">
-            {/* Menú Hamburguesa - Solo Móvil */}
+            {/* Menú Hamburguesa - Visible siempre */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden text-black hover:text-primary-600 transition"
+              className="text-black hover:text-primary-600 transition"
             >
               {mobileMenuOpen ? <X className="h-7 w-7" /> : <Menu className="h-7 w-7" />}
             </button>
-
-            {/* Links de Navegación - Solo Desktop */}
-            <div className="hidden md:flex items-center gap-6">
-              <Link 
-                href="/productos" 
-                className="text-black hover:text-primary-600 transition font-medium"
-              >
-                Productos
-              </Link>
-              <Link 
-                href="/colecciones" 
-                className="text-black hover:text-primary-600 transition font-medium"
-              >
-                Colecciones
-              </Link>
-              <Link 
-                href="/sobre-nosotros" 
-                className="text-black hover:text-primary-600 transition font-medium"
-              >
-                Sobre Nosotros
-              </Link>
-            </div>
           </div>
 
           {/* Centro: Logo */}
@@ -69,22 +50,18 @@ export default function Navbar() {
 
             {/* Carrito */}
             <Link 
-              href="/carrito" 
+              href="/checkout" 
               className="relative text-black hover:text-primary-600 transition"
             >
               <ShoppingCart className="h-5 w-5" />
-              <span className="absolute -top-2 -right-2 bg-primary-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold">
-                0
-              </span>
+              {itemCount > 0 && (
+                <span className="absolute -top-3 -right-3 bg-red-600 text-white text-[10px] rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                  {itemCount}
+                </span>
+              )}
             </Link>
 
-            {/* Cuenta - solo desktop */}
-            <Link 
-              href="/cuenta" 
-              className="hidden md:block text-black hover:text-primary-600 transition"
-            >
-              <User className="h-5 w-5" />
-            </Link>
+
           </div>
         </div>
 
@@ -101,9 +78,9 @@ export default function Navbar() {
         )}
       </div>
 
-      {/* Menú Móvil Desplegable */}
+      {/* Menú Desplegable */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-white border-t shadow-lg">
+        <div className="bg-white border-t shadow-lg absolute w-full left-0 top-20 max-h-[calc(100vh-80px)] overflow-y-auto animate-in slide-in-from-top-5 duration-200">
           <div className="container mx-auto px-4 py-6 space-y-1">
             {/* Links de navegación */}
             <Link 
@@ -115,49 +92,61 @@ export default function Navbar() {
             </Link>
 
             <Link 
-              href="/productos" 
+              href="/personalizar" 
+              className="block py-3 px-4 bg-primary-50 text-primary-700 hover:bg-primary-100 rounded-lg transition font-bold"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              ✨ Diseña tu Prenda
+            </Link>
+
+            <div className="py-2 px-4">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                Categorías
+              </p>
+            </div>
+
+            <Link 
+              href="/productos?categoria=remeras" 
               className="block py-3 px-4 text-gray-700 hover:bg-gray-100 hover:text-primary-600 rounded-lg transition font-medium"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Productos
+              Remeras
             </Link>
 
             <Link 
-              href="/colecciones" 
+              href="/productos?categoria=musculosas" 
               className="block py-3 px-4 text-gray-700 hover:bg-gray-100 hover:text-primary-600 rounded-lg transition font-medium"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Colecciones
+              Musculosas
             </Link>
 
             <Link 
-              href="/sobre-nosotros" 
+              href="/productos?categoria=shorts" 
               className="block py-3 px-4 text-gray-700 hover:bg-gray-100 hover:text-primary-600 rounded-lg transition font-medium"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Sobre Nosotros
+              Shorts
+            </Link>
+
+            <Link 
+              href="/productos?categoria=pantalones" 
+              className="block py-3 px-4 text-gray-700 hover:bg-gray-100 hover:text-primary-600 rounded-lg transition font-medium"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Pantalones
             </Link>
 
             <div className="border-t my-2"></div>
 
-            {/* Cuenta */}
-            <Link 
-              href="/cuenta" 
-              className="flex items-center gap-3 py-3 px-4 text-gray-700 hover:bg-gray-100 hover:text-primary-600 rounded-lg transition"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <User className="h-5 w-5" />
-              <span>Mi Cuenta</span>
-            </Link>
-
             {/* Carrito */}
             <Link 
-              href="/carrito" 
+              href="/checkout" 
               className="flex items-center gap-3 py-3 px-4 text-gray-700 hover:bg-gray-100 hover:text-primary-600 rounded-lg transition"
               onClick={() => setMobileMenuOpen(false)}
             >
               <ShoppingCart className="h-5 w-5" />
-              <span>Carrito (0)</span>
+              <span>Carrito ({itemCount})</span>
             </Link>
           </div>
         </div>

@@ -1,90 +1,54 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ProductCard } from '@/components/ui/ProductCard'
+import Link from 'next/link'
+import Image from 'next/image'
 
 export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0)
 
-  // Datos de productos
-  const products = [
+  // Datos de las categorías para las tarjetas
+  const categories = [
     {
-      id: '1',
-      name: 'Remera Denis Rodman',
-      image: '/images/remera denis rodman blanca .jpeg',
-      sizes: ['M', 'L', 'XL']
+      id: 'remeras',
+      label: 'Remeras',
+      image: 'https://res.cloudinary.com/dndrldskx/image/upload/v1770924259/remera_denis_rodman_blanca_1_da3klh.png', // Usando una imagen de producto como representativa
+      description: 'Descubrí nuestra colección de remeras únicas'
     },
     {
-      id: '2',
-      name: 'Remera Denis Rodman Negra',
-      image: '/images/remera denis rodman negra.jpeg',
-      sizes: ['M', 'L', 'XL']
-    },
-    {
-      id: '3',
-      name: 'Remera Jordan',
-      image: '/images/remera jordan blanca.jpeg',
-      sizes: ['M', 'L', 'XL']
-    },
-    {
-      id: '4',
-      name: 'Remera Jordan Negra',
-      image: '/images/remera jordan negra.jpeg',
-      sizes: [ 'M', 'L', 'XL']
-    },
-    {
-      id: '5',
-      name: 'Remera Maradona',
-      image: '/images/remera maradona blanca.jpeg',
-      sizes: ['M', 'L', 'XL']
-    },
-    {
-      id: '6',
-      name: 'Remera Maradona Negra',
-      image: '/images/remera negra maradona.jpeg',
-      sizes: ['M', 'L', 'XL']
-    },
-    {
-      id: '7',
-      name: 'Musculosa Lisa',
+      id: 'musculosas',
+      label: 'Musculosas',
       image: '/images/musculosa lisa.jpeg',
-      sizes: ['M', 'L', 'XL']
+      description: 'Frescura y estilo para cada día'
     },
     {
-      id: '8',
-      name: 'Short Algodón',
+      id: 'shorts',
+      label: 'Shorts',
       image: '/images/short algodon.jpeg',
-      sizes: ['M', 'L', 'XL']
+      description: 'Comodidad total en movimiento'
     },
     {
-      id: '9',
-      name: 'Pantalón Largo',
+      id: 'pantalones',
+      label: 'Pantalones',
       image: '/images/pantalon largo.jpeg',
-      sizes: ['S', 'M', 'L', 'XL']
+      description: 'Diseño urbano y funcional'
     }
   ]
+
 
   // Datos de los slides - aquí podrás poner tus URLs de imágenes reales
   const slides = [
     {
       id: 1,
-      image: '/banner-1.jpg', // Reemplazar con tu imagen real
-      bgColor: 'from-gray-900 to-gray-700' // Fallback mientras subes imágenes
+      image: 'https://res.cloudinary.com/dndrldskx/image/upload/v1772203959/ChatGPT_Image_27_feb_2026_11_15_42_s9nanb.png', // Banner 1
+      alt: 'Nueva Colección Vivere Ex Animo',
+      position: 'object-center' // Posición por defecto
     },
     {
       id: 2,
-      image: '/banner-2.jpg',
-      bgColor: 'from-primary-900 to-primary-700'
-    },
-    {
-      id: 3,
-      image: '/banner-3.jpg',
-      bgColor: 'from-black to-gray-800'
-    },
-    {
-      id: 4,
-      image: '/banner-4.jpg',
-      bgColor: 'from-gray-800 to-gray-900'
+      image: 'https://res.cloudinary.com/dndrldskx/image/upload/v1772204028/ChatGPT_Image_27_feb_2026_11_38_20_wlmdjf.png', // Banner 2
+      alt: 'Personaliza tu estilo',
+      position: 'object-[center_45%]' // Ajuste a 45%
     }
   ]
 
@@ -120,18 +84,18 @@ export default function Home() {
               index === currentSlide ? 'opacity-100' : 'opacity-0'
             }`}
           >
-            {/* Placeholder con gradiente - reemplazar con imagen real */}
-            <div className={`w-full h-full bg-gradient-to-br ${slide.bgColor} flex items-center justify-center`}>
-              <span className="text-white text-6xl opacity-20">Banner {slide.id}</span>
+            <div className="relative w-full h-full">
+              <Image
+                src={slide.image}
+                alt={slide.alt}
+                fill
+                priority={index === 0}
+                className={`object-cover ${slide.position || 'object-center'}`}
+                sizes="100vw"
+              />
+              {/* Overlay oscuro para legibilidad si es necesario */}
+              <div className="absolute inset-0 bg-black/30" />
             </div>
-            
-            {/* Cuando tengas imágenes reales, descomenta esto y comenta el div de arriba:
-            <img
-              src={slide.image}
-              alt={`Banner ${slide.id}`}
-              className="w-full h-full object-cover"
-            />
-            */}
           </div>
         ))}
 
@@ -152,22 +116,40 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Sección de Productos */}
+      {/* Sección de Categorías Destacadas */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold text-center mb-12">Nuestra Colección</h2>
+          <h2 className="text-4xl font-bold text-center mb-16">Nuestras Colecciones</h2>
           
-          {/* Grid de Productos con efecto Flip 3D */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {products.map((product) => (
-              <div key={product.id}>
-                <ProductCard
-                  id={product.id}
-                  name={product.name}
-                  image={product.image}
-                  sizes={product.sizes}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {categories.map((category) => (
+              <Link 
+                href={`/productos?categoria=${category.id}`} 
+                key={category.id}
+                className="group relative h-[400px] rounded-2xl overflow-hidden shadow-xl cursor-pointer"
+              >
+                {/* Imagen de fondo */}
+                <div 
+                  className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
+                  style={{ backgroundImage: `url('${category.image}')` }}
                 />
-              </div>
+                
+                {/* Overlay oscuro para legibilidad */}
+                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors duration-300" />
+                
+                {/* Contenido */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                  <h3 className="text-3xl font-bold text-white mb-2 uppercase tracking-wider transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                    {category.label}
+                  </h3>
+                  <p className="text-white/90 text-sm opacity-0 group-hover:opacity-100 transform translate-y-8 group-hover:translate-y-0 transition-all duration-300 delay-100 max-w-[200px]">
+                    {category.description}
+                  </p>
+                  <span className="mt-6 px-6 py-2 bg-white text-black text-sm font-bold uppercase tracking-widest rounded-full opacity-0 group-hover:opacity-100 transform translate-y-8 group-hover:translate-y-0 transition-all duration-300 delay-200">
+                    Ver Productos
+                  </span>
+                </div>
+              </Link>
             ))}
           </div>
         </div>
