@@ -31,7 +31,23 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
+      <head>
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Vivere" />
+      </head>
       <body className={inter.className}>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                  navigator.serviceWorker.register('/sw.js')
+                })
+              }
+            `,
+          }}
+        />
         <Providers>
           <div className="flex flex-col min-h-screen">
             <Navbar />
