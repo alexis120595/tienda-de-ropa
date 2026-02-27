@@ -303,6 +303,7 @@ export default function PersonalizarPage() {
                       {(30 * (designSize.width / printAreaRef.current.offsetWidth)).toFixed(0)}cm x {(40 * (designSize.height / printAreaRef.current.offsetHeight)).toFixed(0)}cm
                     </div>
                     
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img 
                       src={uploadedImage} 
                       alt="Tu diseño" 

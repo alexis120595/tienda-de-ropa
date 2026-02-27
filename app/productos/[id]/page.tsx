@@ -1,3 +1,5 @@
+import Link from 'next/link'
+import { ArrowLeft } from 'lucide-react'
 import ProductDetailClient from './ProductDetailClient'
 import { getProductById } from '@/lib/products'
 
