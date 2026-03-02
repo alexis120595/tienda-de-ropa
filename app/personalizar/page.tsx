@@ -19,12 +19,12 @@ const baseImages = {
   },
   musculosa: {
     blanco: {
-      front: '/images/musculosa lisa.jpeg',      // Placeholder
-      back: '/images/musculosa lisa.jpeg'        // Placeholder
+      front: 'https://res.cloudinary.com/dndrldskx/image/upload/v1772462486/musculosa_blanca_lnmr8d.png',
+      back: 'https://res.cloudinary.com/dndrldskx/image/upload/v1772460351/musculosa_blanca_espalda_1_xmg4eo.png'
     },
     negro: {
-      front: '/images/musculosa lisa.jpeg',      // Placeholder
-      back: '/images/musculosa lisa.jpeg'        // Placeholder
+      front: 'https://res.cloudinary.com/dndrldskx/image/upload/v1772462891/musculosa_lisa_be5pan.png',
+      back: 'https://res.cloudinary.com/dndrldskx/image/upload/v1772459989/musculosa_negra_espalda_mjky86.png'
     }
   }
 }
@@ -66,7 +66,7 @@ export default function PersonalizarPage() {
   // Función para capturar el diseño
   const handleFinishDesign = async () => {
     if (!previewRef.current) return
-    
+  
     setIsGenerating(true)
     try {
       const html2canvas = (await import('html2canvas')).default

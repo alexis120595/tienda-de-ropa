@@ -4,11 +4,13 @@ import { useState } from 'react';
 import { useCart } from '@/context/CartContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { generateWhatsAppLink } from '@/lib/whatsapp';
+import { Trash2, Plus, Minus } from 'lucide-react';
 
 export default function CheckoutPage() {
-  const { items, total, clearCart } = useCart();
+  const { items, total, clearCart, removeItem, addItem } = useCart();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -35,7 +37,6 @@ export default function CheckoutPage() {
     setLoading(true);
 
     try {
-      // 1. Generar Link de WhatsApp
       const ADMIN_PHONE = process.env.NEXT_PUBLIC_ADMIN_WHATSAPP || "5491112345678"; 
       
       const whatsappUrl = generateWhatsAppLink(ADMIN_PHONE, {
@@ -53,12 +54,10 @@ export default function CheckoutPage() {
         total: total
       });
 
-      // 2. Abrir WhatsApp en una nueva pestaña
       window.open(whatsappUrl, '_blank');
       
       toast.success('¡Pedido generado! Te redirigimos a WhatsApp...');
 
-      // 3. Limpiar carrito y redirigir
       clearCart();
       router.push('/checkout/success');
       
@@ -67,6 +66,11 @@ export default function CheckoutPage() {
       toast.error('Hubo un error al procesar el pedido.');
       setLoading(false);
     }
+  };
+
+  const handleRemoveItem = (variantId: string, name: string) => {
+    removeItem(variantId);
+    toast.success(`${name} eliminado del carrito`);
   };
 
   if (items.length === 0) {
@@ -170,18 +174,29 @@ export default function CheckoutPage() {
         <div className="h-fit space-y-6">
            <div className="bg-white p-6 rounded-xl shadow-sm">
               <h3 className="text-xl font-bold mb-4">Resumen del Pedido</h3>
-              <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
+              <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
                  {items.map((item) => (
                     <div key={item.variantId} className="flex gap-4 border-b pb-4 last:border-0 last:pb-0">
                        <div className="relative w-16 h-16 bg-gray-100 rounded-md overflow-hidden flex-shrink-0">
-                          {/* <Image src={item.image} alt={item.name} fill className="object-cover" /> */}
-                          <div className="w-full h-full bg-gray-200"></div> 
+                          <Image 
+                            src={item.image} 
+                            alt={item.name} 
+                            fill 
+                            className="object-contain p-1" 
+                          />
                        </div>
-                       <div className="flex-1">
-                          <h4 className="font-medium text-sm">{item.name}</h4>
+                       <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-sm truncate">{item.name}</h4>
                           <p className="text-xs text-gray-500">Talle: {item.size} | Cant: {item.quantity}</p>
                           <p className="font-bold text-sm mt-1">${(item.price * item.quantity).toLocaleString()}</p>
                        </div>
+                       <button
+                          onClick={() => handleRemoveItem(item.variantId, item.name)}
+                          className="flex-shrink-0 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors self-center"
+                          title="Eliminar producto"
+                       >
+                          <Trash2 className="w-4 h-4" />
+                       </button>
                     </div>
                  ))}
               </div>
@@ -192,9 +207,21 @@ export default function CheckoutPage() {
                  </div>
               </div>
            </div>
+
+           {/* Botón para vaciar carrito */}
+           <button
+              onClick={() => {
+                clearCart();
+                toast.success('Carrito vaciado');
+              }}
+              className="w-full py-2 text-sm text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors border border-gray-200"
+           >
+              Vaciar carrito
+           </button>
         </div>
 
       </div>
     </div>
   );
 }
+

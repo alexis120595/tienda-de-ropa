@@ -42,13 +42,13 @@ export default function Home() {
       id: 1,
       image: 'https://res.cloudinary.com/dndrldskx/image/upload/v1772203959/ChatGPT_Image_27_feb_2026_11_15_42_s9nanb.png', // Banner 1
       alt: 'Nueva Colección Vivere Ex Animo',
-      position: 'object-center' // Posición por defecto
+      position: 'object-contain md:object-cover md:object-center' // Completa en móvil, cover en desktop
     },
     {
       id: 2,
       image: 'https://res.cloudinary.com/dndrldskx/image/upload/v1772204028/ChatGPT_Image_27_feb_2026_11_38_20_wlmdjf.png', // Banner 2
       alt: 'Personaliza tu estilo',
-      position: 'object-[center_45%]' // Ajuste a 45%
+      position: 'object-cover object-[center_45%]' // Ajuste a 45%
     }
   ]
 
@@ -84,13 +84,13 @@ export default function Home() {
               index === currentSlide ? 'opacity-100' : 'opacity-0'
             }`}
           >
-            <div className="relative w-full h-full">
+            <div className="relative w-full h-full bg-black">
               <Image
                 src={slide.image}
                 alt={slide.alt}
                 fill
                 priority={index === 0}
-                className={`object-cover ${slide.position || 'object-center'}`}
+                className={`${slide.position || 'object-cover object-center'}`}
                 sizes="100vw"
               />
               {/* Overlay oscuro para legibilidad si es necesario */}
