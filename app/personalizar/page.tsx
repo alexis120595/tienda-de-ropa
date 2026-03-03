@@ -49,6 +49,9 @@ export default function PersonalizarPage() {
   
   const [lockAspectRatio, setLockAspectRatio] = useState(true)
 
+  // Código de referencia estable (evita mismatch de hidratación)
+  const refCode = useRef(Math.random().toString(36).substring(2, 8).toUpperCase())
+
   // Variables derivadas del estado actual
   const currentDesign = designs[view]
   const uploadedImage = currentDesign?.image || null
@@ -59,33 +62,35 @@ export default function PersonalizarPage() {
   const PRINT_AREA_WIDTH_CM = 30
   const PRINT_AREA_HEIGHT_CM = 40
   
-  // Referencia al contenedor de la vista previa para capturar
+  // Referencia al contenedor completo de captura (prenda + ficha)
+  const captureRef = useRef<HTMLDivElement>(null)
+  // Referencia al contenedor de la vista previa de la prenda
   const previewRef = useRef<HTMLDivElement>(null)
   const [isGenerating, setIsGenerating] = useState(false)
 
   // Función para capturar el diseño
   const handleFinishDesign = async () => {
-    if (!previewRef.current) return
+    if (!captureRef.current) return
   
     setIsGenerating(true)
     try {
       const html2canvas = (await import('html2canvas')).default
       
       // Preparamos el contenedor para la captura (agregando clase 'capturing')
-      if (previewRef.current) {
-        previewRef.current.classList.add('capturing-mode')
+      if (captureRef.current) {
+        captureRef.current.classList.add('capturing-mode')
       }
 
-      // Capturamos el contenedor
-      const canvas = await html2canvas(previewRef.current, {
+      // Capturamos el contenedor completo (prenda + ficha)
+      const canvas = await html2canvas(captureRef.current, {
         useCORS: true, 
-        backgroundColor: '#ffffff', // Fondo blanco para que se lea la ficha
+        backgroundColor: '#ffffff',
         scale: 2, 
       })
       
       // Restauramos el estado normal
-      if (previewRef.current) {
-        previewRef.current.classList.remove('capturing-mode')
+      if (captureRef.current) {
+        captureRef.current.classList.remove('capturing-mode')
       }
       
       // Convertir a imagen
@@ -99,7 +104,6 @@ export default function PersonalizarPage() {
       link.click()
       document.body.removeChild(link)
       
-      // Aquí podrías guardar 'image' en el estado o enviarla a una API
       console.log('Diseño capturado con éxito')
       
     } catch (error) {
@@ -120,11 +124,7 @@ export default function PersonalizarPage() {
   const getDimensionsInCm = () => {
     if (!printAreaRef.current) return { width: 0, height: 0 }
     
-    // Ancho del contenedor en píxeles
     const containerWidthPx = printAreaRef.current.offsetWidth
-    
-    // Factor de conversión: cuántos cm es 1 pixel
-    // Asumimos que el ancho del contenedor printAreaRef ES los 30cm
     const pxToCm = PRINT_AREA_WIDTH_CM / containerWidthPx
     
     return {
@@ -134,7 +134,6 @@ export default function PersonalizarPage() {
   }
 
   const dimensions = getDimensionsInCm()
-
 
   // Manejar subida de imagen
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -147,8 +146,8 @@ export default function PersonalizarPage() {
           ...prev,
           [view]: {
             image: imageSrc,
-            position: { x: 0, y: 0 }, // Reset position
-            size: { width: 200, height: 200 } // Reset size
+            position: { x: 0, y: 0 },
+            size: { width: 200, height: 200 }
           }
         }))
       }
@@ -183,8 +182,6 @@ export default function PersonalizarPage() {
     }
   }
 
-  // Obtener la imagen de fondo actual
-  // @ts-ignore - temporary ignore for incomplete type structure if needed, but should be fine
   const currentBaseImage = baseImages[productType]?.[selectedColor]?.[view] || '/placeholder.png'
 
   return (
@@ -224,101 +221,105 @@ export default function PersonalizarPage() {
               </button>
             </div>
 
-            {/* Contenedor relativo para posicionar capas */}
-            <div 
-              ref={previewRef}
-              className="relative w-full max-w-md aspect-[3/4]"
-              id="design-preview"
-            >
-              {/* Capa 1: Prenda Base */}
-              <Image
-                src={currentBaseImage}
-                alt="Prenda base"
-                fill
-                className="object-contain z-0"
-                priority
-              />
-
-              {/* Ficha de datos (visible solo al capturar) */}
+            {/* Contenedor de captura: prenda + ficha debajo */}
+            <div ref={captureRef} className="w-full max-w-md bg-white">
+              
+              {/* Contenedor de la prenda con el diseño */}
               <div 
-                className="absolute top-4 left-4 right-4 bg-white/95 p-3 rounded-lg border border-gray-200 shadow-sm z-50 hidden capturing-show"
+                ref={previewRef}
+                className="relative w-full aspect-[3/4]"
+                id="design-preview"
+              >
+                {/* Capa 1: Prenda Base */}
+                <Image
+                  src={currentBaseImage}
+                  alt="Prenda base"
+                  fill
+                  className="object-contain z-0"
+                  priority
+                />
+                
+                {/* ÁREA DE IMPRESIÓN (30x40cm) - Contenedor invisible para referencia de cálculos */}
+                <div 
+                  ref={printAreaRef}
+                  className="absolute top-[20%] left-[25%] right-[25%] h-[50%] z-5 pointer-events-none flex items-center justify-center"
+                >
+                </div>
+
+                {/* Capa 2: Diseño del Usuario (Arrastrable) */}
+                {uploadedImage && printAreaRef.current && (
+                  <div className="absolute inset-0 z-10 overflow-hidden isolate">
+                    <Rnd
+                      scale={1}
+                      size={{ width: designSize.width, height: designSize.height }}
+                      position={{ x: designPosition.x, y: designPosition.y }}
+                      minWidth={20}
+                      minHeight={20}
+                      bounds="parent"
+                      onDrag={(e, d) => {
+                        updateDesignPosition(d.x, d.y)
+                      }}
+                      onResize={(e, direction, ref, delta, position) => {
+                        updateDesignSize(
+                          parseInt(ref.style.width),
+                          parseInt(ref.style.height),
+                          position.x,
+                          position.y
+                        )
+                      }}
+                      className="border-2 border-dashed border-primary-500 group relative touch-none hover:bg-primary-500/5 transition-colors capturing-hide-controls-parent"
+                    >
+                      {/* Botón para eliminar */}
+                      <button 
+                        onClick={clearImage}
+                        className="absolute -top-3 -right-3 z-50 bg-red-500 text-white p-1 rounded-full shadow-md hover:bg-red-600 transition flex items-center justify-center w-6 h-6 capturing-hide-controls"
+                        title="Eliminar diseño"
+                      >
+                        <X size={14} />
+                      </button>
+                      
+                      {/* Texto con MEDIDAS EN VIVO */}
+                      <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black/80 text-white px-2 py-1 rounded text-xs whitespace-nowrap z-50 pointer-events-none shadow-sm font-mono tracking-wider tabular-nums capturing-hide-controls">
+                        {(30 * (designSize.width / printAreaRef.current.offsetWidth)).toFixed(0)}cm x {(40 * (designSize.height / printAreaRef.current.offsetHeight)).toFixed(0)}cm
+                      </div>
+                      
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img 
+                        src={uploadedImage} 
+                        alt="Tu diseño" 
+                        className="w-full h-full object-contain pointer-events-none select-none"
+                        draggable="false"
+                      />
+                    </Rnd>
+                  </div>
+                )}
+                
+                {/* Placeholder si no hay imagen */}
+                {!uploadedImage && (
+                  <div className="absolute top-[25%] left-[25%] w-[50%] h-[40%] flex items-center justify-center z-10 pointer-events-none opacity-50">
+                  </div>
+                )}
+              </div>
+
+              {/* Ficha de datos DEBAJO de la prenda (visible solo al capturar) */}
+              <div 
+                className="bg-white p-4 border-t border-gray-200 hidden capturing-show"
               >
                 <div className="text-xs font-mono text-gray-800 space-y-1">
-                  <p className="font-bold border-b pb-1 mb-1">FICHA DE PERSONALIZACIÓN</p>
-                  <div className="grid grid-cols-2 gap-x-4">
+                  <p className="font-bold border-b pb-1 mb-1 text-sm">📋 FICHA DE PERSONALIZACIÓN</p>
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-1">
                     <p>Prenda: <span className="font-semibold capitalize">{productType}</span></p>
                     <p>Color: <span className="font-semibold capitalize">{selectedColor}</span></p>
                     <p>Vista: <span className="font-semibold capitalize">{view === 'front' ? 'Frente' : 'Dorso'}</span></p>
                     <p>Talle: <span className="font-semibold">{selectedSize}</span></p>
-                    <p>Estampa: <span className="font-semibold">
+                    <p className="col-span-2">Estampa: <span className="font-semibold">
                       {(30 * (designSize.width / (printAreaRef.current?.offsetWidth || 1))).toFixed(0)}x
                       {(40 * (designSize.height / (printAreaRef.current?.offsetHeight || 1))).toFixed(0)} cm
                     </span></p>
                   </div>
-                  <p className="text-[10px] text-gray-500 pt-1 mt-1 border-t">REF: {Date.now().toString().slice(-6)} | Vivere Ex Animo</p>
+                  <p className="text-[10px] text-gray-500 pt-1 mt-1 border-t">REF: {refCode.current} | Vivere Ex Animo</p>
                 </div>
               </div>
-              
-              {/* ÁREA DE IMPRESIÓN (30x40cm) - Contenedor invisible para referencia de cálculos */}
-              <div 
-                ref={printAreaRef}
-                className="absolute top-[20%] left-[25%] right-[25%] h-[50%] z-5 pointer-events-none flex items-center justify-center"
-              >
-              </div>
-
-              {/* Capa 2: Diseño del Usuario (Arrastrable) */}
-              {uploadedImage && printAreaRef.current && (
-                <div className="absolute inset-0 z-10 overflow-hidden isolate">
-                  <Rnd
-                    scale={1}
-                    size={{ width: designSize.width, height: designSize.height }}
-                    position={{ x: designPosition.x, y: designPosition.y }}
-                    minWidth={20}
-                    minHeight={20}
-                    bounds="parent" // Se puede mover por toda la remera
-                    onDrag={(e, d) => {
-                      updateDesignPosition(d.x, d.y)
-                    }}
-                    onResize={(e, direction, ref, delta, position) => {
-                      updateDesignSize(
-                        parseInt(ref.style.width),
-                        parseInt(ref.style.height),
-                        position.x,
-                        position.y
-                      )
-                    }}
-                    className="border-2 border-dashed border-primary-500 group relative touch-none hover:bg-primary-500/5 transition-colors capturing-hide-controls-parent"
-                  >
-                    {/* Botón para eliminar */}
-                    <button 
-                      onClick={clearImage}
-                      className="absolute -top-3 -right-3 z-50 bg-red-500 text-white p-1 rounded-full shadow-md hover:bg-red-600 transition flex items-center justify-center w-6 h-6 capturing-hide-controls"
-                      title="Eliminar diseño"
-                    >
-                      <X size={14} />
-                    </button>
-                    
-                    {/* Texto con MEDIDAS EN VIVO */}
-                    <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black/80 text-white px-2 py-1 rounded text-xs whitespace-nowrap z-50 pointer-events-none shadow-sm font-mono tracking-wider tabular-nums capturing-hide-controls">
-                      {(30 * (designSize.width / printAreaRef.current.offsetWidth)).toFixed(0)}cm x {(40 * (designSize.height / printAreaRef.current.offsetHeight)).toFixed(0)}cm
-                    </div>
-                    
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img 
-                      src={uploadedImage} 
-                      alt="Tu diseño" 
-                      className="w-full h-full object-contain pointer-events-none select-none"
-                      draggable="false"
-                    />
-                  </Rnd>
-                </div>
-              )}
-              
-              {/* Placeholder si no hay imagen - ELIMINADO */}
-              {!uploadedImage && (
-                <div className="absolute top-[25%] left-[25%] w-[50%] h-[40%] flex items-center justify-center z-10 pointer-events-none opacity-50">
-                </div>
-              )}
             </div>
           </div>
 
